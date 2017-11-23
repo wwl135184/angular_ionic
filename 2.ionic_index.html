@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html ng-app="ionicApp">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="./css/ionic.css" />
+	</head>
+
+	<body>
+		<div ng-controller="indexCtrl">
+			<!--侧边列表-->
+			<ion-side-menus>
+				<!-- 中间内容 -->
+				<ion-side-menu-content>
+					<!--头部-->
+					<ion-header-bar align-title="center" class="bar-positive">
+						<div class="buttons">
+							<button class="button" ng-click="toggleLeft()">个人信息</button>
+						</div>
+						<h1 class="title">消息</h1>
+						<div class="buttons">
+							<button class="button" ng-click = "toggleRight()">添加好友</button>
+						</div>
+					</ion-header-bar>
+					<ion-content>
+						<!--下拉刷新-->
+						<ion-refresher pulling-text="loading..." pulling-icon="ion-ios-paw" refreshing-icon="ion-social-snapchat-outline" on-refresh="doRefresh()">
+						</ion-refresher>
+						<!--列表-->
+						<ion-item ng-repeat="a in arr" class="item-thumbnail-left">
+							<img ng-src="{{a.bigImage[0]}}">
+							<h2>{{a.source}}</h2>
+							<p>{{a.title}}</p>
+						</ion-item>
+						<!--上拉刷新-->
+						<ion-infinite-scroll on-infinite="doRefresh()" distance="1%">
+						</ion-infinite-scroll>
+					</ion-content>
+					<!--底部-->
+					<ion-footer-bar align-title="center" class="bar-assertive">
+						<div class="buttons">
+							<button class="button" ng-click="showPopup()">链接WiFi</button>
+						</div>
+						<h1 class="title">QQ</h1>
+						<div class="buttons" ng-click="doSomething()">
+							<button class="button" ng-click="showConfirm()">关闭WiFi</button>
+						</div>
+					</ion-footer-bar>
+				</ion-side-menu-content>
+				<!-- 左侧菜单 -->
+				<ion-side-menu side="left">
+				</ion-side-menu>
+				
+				<!-- 左侧菜单 -->
+				<ion-side-menu side="right">
+				</ion-side-menu>
+			</ion-side-menus>
+		</div>
+		<script type="text/javascript" src="./js/ionic.bundle.js"></script>
+		<script type="text/javascript">
+			var app = angular.module("ionicApp", ["ionic"]);
+			app.controller("indexCtrl", function($scope, $http, $ionicPopup, $timeout, $ionicSideMenuDelegate) {
+				$scope.arr = [];
+				$scope.doRefresh = function() {
+					$http.get("./json/qqnews.json").then(function(data) {
+						console.log(data)
+						$scope.arr = $scope.arr.concat(data.data.newslist);
+						$scope.$broadcast('scroll.refreshComplete');
+						$scope.$broadcast('scroll.infiniteScrollComplete');
+					})
+				};
+				$scope.doRefresh()
+				$scope.showPopup = function() {
+					$scope.data = {}
+					// 一个精心制作的自定义弹窗
+					var myPopup = $ionicPopup.show({
+						template: '<input type="password" ng-model="data.wifi">',
+						title: '输入WiFi密码',
+						subTitle: 'Please use normal things',
+						scope: $scope,
+						buttons: [
+							{ text: 'Cancel' },
+							{
+								text: '<b>Save</b>',
+								type: 'button-positive',
+								onTap: function(e) {
+									if(!$scope.data.wifi) {
+										//不允许用户关闭，除非他键入wifi密码
+										e.preventDefault();
+									} else {
+										return $scope.data.wifi;
+									}
+								}
+							},
+						]
+					});
+					myPopup.then(function(res) {
+						console.log('Tapped!', res);
+					});
+					$timeout(function() {
+						myPopup.close(); //由于某种原因3秒后关闭弹出
+					}, 3000);
+				};
+				$scope.showConfirm = function() {
+					var confirmPopup = $ionicPopup.confirm({
+						title: '断开WiFi',
+						template: '你要断开WiFi链接吗？'
+					});
+					confirmPopup.then(function(res) {
+						if(res) {
+							console.log('You are sure');
+						} else {
+							console.log('You are not sure');
+						}
+					});
+				};
+				$scope.toggleLeft = function() {
+					$ionicSideMenuDelegate.toggleLeft();
+				};
+				$scope.toggleRight = function() {
+					$ionicSideMenuDelegate.toggleRight();
+				};
+			})
+		</script>
+	</body>
+
+</html>
